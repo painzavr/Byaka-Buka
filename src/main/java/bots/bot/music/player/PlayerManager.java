@@ -80,7 +80,7 @@ public class PlayerManager {
 
                     if(!tracks.isEmpty()){
                         musicManager.scheduler.queue(tracks.get(0));
-                        textChannel.sendMessage("```Adding to queue " + tracks.get(0).getInfo().title + " by " + tracks.get(0).getInfo().author + "````").queue();
+                        textChannel.sendMessage("```Adding to queue " + tracks.get(0).getInfo().title + " by " + tracks.get(0).getInfo().author + "```").queue();
                     }
                 }
 

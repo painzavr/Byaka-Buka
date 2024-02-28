@@ -52,7 +52,7 @@ public class mBot {
         jdaCommands.registerCommand(new Roma());
 
 
-        jda = JDABuilder.createDefault("")
+        jda = JDABuilder.createDefault("MTExNDYzMzIyOTk3MDk3Njg0OA.G94ITX.DFTEEMFdyrWxLfGNT_5iE09OdeIvWKMh8uwvys")
                 .setActivity(Activity.watching("checks"))
                         .addEventListeners(jdaCommands)
                         .addEventListeners(voiceListener)
