@@ -2,6 +2,7 @@ package bots.bot.music.player;
 
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.*;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.track.*;
 import net.dv8tion.jda.api.entities.*;
@@ -38,7 +39,7 @@ public class PlayerManager {
             @Override
             public void trackLoaded(AudioTrack audioTrack) {
                 musicManager.scheduler.queue(audioTrack);
-                textChannel.sendMessage("Adding to queue " + audioTrack.getInfo().title + " by " + audioTrack.getInfo().author).queue();
+                textChannel.sendMessage("```Adding to queue " + audioTrack.getInfo().title + " by " + audioTrack.getInfo().author + "```").queue();
             }
 
             @Override
@@ -52,12 +53,12 @@ public class PlayerManager {
 
             @Override
             public void noMatches() {
-
+                textChannel.sendMessage("```Sorry, I couldn't find anything suitable. Could you please provide more details for your request?```").queue();
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
-
+                textChannel.sendMessage("```An unexpected error occurred; perhaps this will help clarify the situation: " + e.getMessage() + "```").queue();
             }
         });
     }
@@ -67,17 +68,21 @@ public class PlayerManager {
 
         while(musicIterator.hasNext()) {
             String link = String.valueOf(musicIterator.next());
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             this.audioPlayerManager.loadItemOrdered(musicManager, link, new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack audioTrack) {
                     musicManager.scheduler.queue(audioTrack);
-                    textChannel.sendMessage("Adding to queue " + audioTrack.getInfo().title + " by " + audioTrack.getInfo().author).queue();
+                    textChannel.sendMessage("```Adding to queue " + audioTrack.getInfo().title + " by " + audioTrack.getInfo().author + "```").queue();
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist audioPlaylist) {
                     final List<AudioTrack> tracks = audioPlaylist.getTracks();
-
                     if(!tracks.isEmpty()){
                         musicManager.scheduler.queue(tracks.get(0));
                         textChannel.sendMessage("```Adding to queue " + tracks.get(0).getInfo().title + " by " + tracks.get(0).getInfo().author + "```").queue();
@@ -91,7 +96,7 @@ public class PlayerManager {
 
                 @Override
                 public void loadFailed(FriendlyException e) {
-                    textChannel.sendMessage("Failed to load some track: " + e.getMessage()).queue();
+                    textChannel.sendMessage("Failed to load " + link + " because of " + e.getMessage()).queue();
                 }
             });
         }

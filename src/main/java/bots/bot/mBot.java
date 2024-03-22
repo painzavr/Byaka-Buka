@@ -25,14 +25,13 @@ import java.util.Arrays;
 @SpringBootApplication
 
 public class mBot {
-    public String token;
+
     public static JDA jda;
 
 
     public final static GatewayIntent[] INTENTS = {GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_PRESENCES, GatewayIntent.MESSAGE_CONTENT};
     public static void main(String[] args) throws LoginException, InterruptedException {
         mBot mb = new mBot();
-        System.out.println(mb.token);
         ApplicationContext applicationContext = SpringApplication.run(mBot.class, args);
 
 
@@ -51,8 +50,7 @@ public class mBot {
         jdaCommands.registerCommand(new CurrentTrack());
         jdaCommands.registerCommand(new Roma());
 
-
-        jda = JDABuilder.createDefault("MTExNDYzMzIyOTk3MDk3Njg0OA.G94ITX.DFTEEMFdyrWxLfGNT_5iE09OdeIvWKMh8uwvys")
+        jda = JDABuilder.createDefault(UR_TOKEN)
                 .setActivity(Activity.watching("checks"))
                         .addEventListeners(jdaCommands)
                         .addEventListeners(voiceListener)
@@ -75,7 +73,8 @@ public class mBot {
                         .addOption(OptionType.STRING, "title", "Name of the playlist from which the tracks will be removed", true)
                         .addOption(OptionType.INTEGER, "number","Number of the track to be removed", true),
                 Commands.slash("delete", "Delete chosen playlist")
-                        .addOption(OptionType.STRING, "title", "Title of the playlist to be deleted")
+                        .addOption(OptionType.STRING, "title", "Title of the playlist to be deleted"),
+                Commands.slash("queue", "Check the current composition queue")
 
         ).queue();
         jda.awaitReady();

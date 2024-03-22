@@ -1,9 +1,12 @@
 package bots.bot.playlist;
 
 import bots.bot.coin.Profile;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,14 +21,17 @@ public class Playlist {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long playlistId;
 
+    @Fetch(FetchMode.JOIN)
     @ElementCollection
     @CollectionTable(joinColumns = @JoinColumn(name = "playlistId"))
     private List<String> list;
 
     private String name;
 
+    @Fetch(FetchMode.JOIN)
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "idDiscord")
+    @JsonIgnore
     private Profile profile;
 
     public Playlist(String name, String[] tracks){

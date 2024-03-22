@@ -28,13 +28,13 @@ public class JDACommands extends ListenerAdapter {
     }
 
     private void init(MessageReceivedEvent event) throws InterruptedException {
-        Iterator var2 = this.commands.iterator();
+        Iterator commandIterator = this.commands.iterator();
 
-        while(var2.hasNext()) {
-            ICommand command = (ICommand)var2.next();
-            String var10000 = event.getMessage().getContentRaw();
-            String var10001 = this.prefix;
-            if (var10000.startsWith(var10001 + command.getName())) {
+        while(commandIterator.hasNext()) {
+            ICommand command = (ICommand)commandIterator.next();
+            String message = event.getMessage().getContentRaw();
+            String commandPrefix = this.prefix;
+            if (message.startsWith(commandPrefix + command.getName())) {
                 command.execute(event);
                 break;
             }

@@ -40,12 +40,17 @@ public class Skip implements ICommand {
         final AudioPlayer audioPlayer = musicManager.audioPlayer;
 
         if(audioPlayer.getPlayingTrack() == null){
-            channel.sendMessage("There is no track playing currently.").queue();
+            channel.sendMessage("```There is nothing to be skipped```").queue();
             return;
         }
-
-        musicManager.scheduler.nextTrack();
-        channel.sendMessage("Skipped the current track. Now playing **`" + musicManager.audioPlayer.getPlayingTrack().getInfo().title + "`** by **`" + musicManager.audioPlayer.getPlayingTrack().getInfo().author + "`**.").queue();
+        if(musicManager.scheduler.queue.isEmpty()){
+            channel.sendMessage("```That was the last composition```").queue();
+            musicManager.audioPlayer.stopTrack();
+            musicManager.scheduler.queue.clear();
+        }else{
+            musicManager.scheduler.nextTrack();
+            channel.sendMessage("Skipped the current track. Now playing **`" + musicManager.audioPlayer.getPlayingTrack().getInfo().title + "`** by **`" + musicManager.audioPlayer.getPlayingTrack().getInfo().author + "`**.").queue();
+        }
     }
 
     @Override

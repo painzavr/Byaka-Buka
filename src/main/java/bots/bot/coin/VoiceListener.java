@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 
@@ -14,6 +15,7 @@ import java.util.Map;
 public class VoiceListener extends ListenerAdapter {
 
     private final ProfileRepository profileRepository;
+    public static HashMap<Long, Member> memberCache = new HashMap<Long, Member>();
 
     @Autowired
     public VoiceListener(ProfileRepository profileRepository) {
@@ -26,6 +28,9 @@ public class VoiceListener extends ListenerAdapter {
             if (event.getChannelLeft() == null && event.getChannelJoined() != null) {
                 System.out.println(member.getUser().getName() + " joined the " + event.getGuild().getName());
                 voiceStartTime.put(event.getMember().getIdLong(), System.currentTimeMillis());
+                if(!memberCache.containsKey(member.getIdLong())){
+                    memberCache.put(member.getIdLong(), member);
+                }
             } else if (event.getChannelLeft() != null && event.getChannelJoined() == null && !member.getUser().isBot()) {
                 System.out.println(member.getUser().getName() + " left the " + event.getGuild().getName());
                 long timeSpent = System.currentTimeMillis() - voiceStartTime.get(event.getMember().getIdLong());
@@ -40,6 +45,7 @@ public class VoiceListener extends ListenerAdapter {
             Profile profile = new Profile(member.getIdLong());
             profileRepository.save(profile);
             voiceStartTime.put(event.getMember().getIdLong(), System.currentTimeMillis());
+            memberCache.put(member.getIdLong(), member);
         }
     }
 }

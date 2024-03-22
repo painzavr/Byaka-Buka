@@ -1,6 +1,9 @@
 package bots.bot.music.commands;
 
 import bots.bot.music.ICommand;
+import bots.bot.music.autoleave.AdvancedHashMap;
+import bots.bot.music.autoleave.AutoLeave;
+import bots.bot.music.autoleave.LeftTimerTask;
 import bots.bot.music.player.PlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -21,11 +24,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Play implements ICommand {
-    private Map<Long, Long> guildLeave = new HashMap<>();
-    private Map<Long, Timer> guildTimer = new HashMap<>();
+    public static AdvancedHashMap<Long, Timer, Long> leaveList = new AdvancedHashMap<>();
     private static final long IDLE_TIME_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
-    private long duration;
-    private long currentTime;
 
 
     @Override
@@ -35,7 +35,6 @@ public class Play implements ICommand {
             event.getChannel().asTextChannel().sendMessage("You need to be in a voice channel for this command to work.").queue();
             return;
         }
-
         if(!event.getMember().getGuild().getSelfMember().getVoiceState().inAudioChannel()){
             final AudioManager audioManager = event.getGuild().getAudioManager();
             final VoiceChannel memberChannel = (VoiceChannel) event.getMember().getVoiceState().getChannel();
@@ -47,6 +46,9 @@ public class Play implements ICommand {
         String[] songs = new String[lines.length];
 
         for (int i = 0; i < lines.length; i++) {
+            if(lines[i].length()<6){
+                return;
+            }
             songs[i] = lines[i].substring(6); // Remove "!play " prefix
         }
         for(String link: songs) {
@@ -57,17 +59,30 @@ public class Play implements ICommand {
             System.out.println(event.getMember().getUser().getName() + " " + event.getGuild().getName());
 
             PlayerManager.getInstance().loadAndPlay(event.getChannel().asTextChannel(), link);
-            Thread.sleep(1000);
 
-            if(!guildLeave.containsKey(event.getGuild().getIdLong())){
-                currentTime = System.currentTimeMillis();
-                guildLeave.put(event.getGuild().getIdLong(), currentTime + 300_000L);
-                guildTimer.put(event.getGuild().getIdLong(), new Timer());
-            }else{
-                duration = guildLeave.get(event.getGuild().getIdLong()) + 300_000L;
-                guildLeave.replace(event.getGuild().getIdLong(), duration );
-            }
-            startIdleTimer(event.getGuild(),guildLeave.get(event.getGuild().getIdLong()));
+
+            Thread.sleep(1000);
+            setTimer(event.getGuild(),1);
+
+        }
+    }
+
+    private void setTimer(Guild guild, int quantity) {
+        if(!leaveList.containsKey(guild.getIdLong())){
+            Timer timer = new Timer();
+            timer.schedule(new LeftTimerTask(guild), IDLE_TIME_THRESHOLD*quantity);
+            long executeTime = System.currentTimeMillis() + IDLE_TIME_THRESHOLD*quantity;
+            leaveList.put(guild.getIdLong(), timer, executeTime);
+            System.out.println("Going to leave from " + guild.getName() + " at " + new Date(executeTime));
+        }else{
+            leaveList.get(guild.getIdLong()).getValue1().cancel();
+            Timer timer = new Timer();
+            long newDelay = leaveList.get(guild.getIdLong()).getValue2()-System.currentTimeMillis()+IDLE_TIME_THRESHOLD*quantity;
+            System.out.println("New delay time is - " + newDelay/1000.0 + " sec");
+            timer.schedule(new LeftTimerTask(guild), newDelay);
+            leaveList.updateValues(guild.getIdLong(), timer, newDelay+System.currentTimeMillis());
+            System.out.println("Previous timer was canceled! Starting new one:");
+            System.out.println("Going to leave from " + guild.getName() + " at " + new Date(newDelay+System.currentTimeMillis()));
         }
     }
 
@@ -79,7 +94,7 @@ public class Play implements ICommand {
         }
         if(!event.getMember().getGuild().getSelfMember().getVoiceState().inAudioChannel()){
             final AudioManager audioManager = event.getGuild().getAudioManager();
-            final VoiceChannel memberChannel = (VoiceChannel) event.getMember().getVoiceState().getChannel();
+            final VoiceChannel memberChannel = event.getMember().getVoiceState().getChannel().asVoiceChannel();
 
             audioManager.openAudioConnection(memberChannel);
         }
@@ -96,46 +111,11 @@ public class Play implements ICommand {
         }
         System.out.println(event.getMember().getUser().getName() + " " + event.getGuild().getName());
 
-
-
         PlayerManager.getInstance().loadAndPlaylist(event.getChannel().asTextChannel(), urlSong);
 
-        if(!guildLeave.containsKey(event.getGuild().getIdLong())){
-            currentTime = System.currentTimeMillis();
-            guildLeave.put(event.getGuild().getIdLong(), currentTime + 300_000L*urlSong.size());
-            guildTimer.put(event.getGuild().getIdLong(), new Timer());
-        }else{
-            duration = guildLeave.get(event.getGuild().getIdLong()) + 300_000L*urlSong.size();
-            guildLeave.replace(event.getGuild().getIdLong(), duration );
-        }
-        startIdleTimer(event.getGuild(),guildLeave.get(event.getGuild().getIdLong()));
+        setTimer(event.getGuild(), urlSong.size());
 
-        event.reply("```You are listening to "+ songName + "```").queue();
-    }
-    public void startIdleTimer(Guild guild, long currentTime) {
-        if (guildTimer.get(guild.getIdLong()) != null) {
-            guildTimer.get(guild.getIdLong()).cancel();
-        }
-        guildTimer.replace(guild.getIdLong(), new Timer());
-        Date scheduledTime = new Date(currentTime+IDLE_TIME_THRESHOLD);
-        System.out.println("GONNA LEAVE AT - " + scheduledTime);
-        guildTimer.get(guild.getIdLong()).schedule(new MyTimer(guild), scheduledTime);
-    }
-
-    class MyTimer extends TimerTask {
-        private final Guild guild;
-
-        public MyTimer(Guild guild) {
-            this.guild = guild;
-        }
-
-        @Override
-        public void run() {
-            guild.getAudioManager().closeAudioConnection();
-            guildLeave.remove(guild.getIdLong());
-            guildTimer.remove(guild.getIdLong());
-            System.out.println("Gonna leave from - " + guild.getName());
-        }
+        event.reply("```You are listening to "+ songName + "```").setEphemeral(true).queue();
     }
 
     private boolean isUrl(String url){
@@ -146,6 +126,7 @@ public class Play implements ICommand {
             return false;
         }
     }
+
     @Override
     public String getName() {
         return "play";

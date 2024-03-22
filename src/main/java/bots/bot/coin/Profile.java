@@ -1,9 +1,12 @@
 package bots.bot.coin;
 
 import bots.bot.playlist.Playlist;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +20,9 @@ public class Profile {
     @Column(unique = true)
     private Long idDiscord;
     private int coins;
-    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+
+    @Fetch(FetchMode.JOIN)
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL)
     private List<Playlist> playlists;
     public Profile(long id){
         this.idDiscord = id;
@@ -29,16 +34,29 @@ public class Profile {
         this.coins = 0;
     }
 
-    public Long getId(){
+    public Long getIdDiscord(){
         return this.idDiscord;
     }
-    public int getBalance(){ return this.coins; }
+    public int getCoins(){ return this.coins; }
     public void update(int amount){
         this.coins += amount;
+    }
+
+    public void deletePlaylistByName(String name){
+        for(Playlist playlist: this.getPlaylists()){
+            if(playlist.getName().equals(name)){
+                this.getPlaylists().remove(playlist);
+                System.out.println(name + " was found, deleting");
+                return;
+
+            }
+        }
     }
 
     @Override
     public String toString() {
         return "prof + " + this.idDiscord + " have " + this.coins + this.playlists;
     }
+
+
 }

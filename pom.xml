@@ -9,9 +9,8 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>bots</groupId>
-	<artifactId>spring-boot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>spring-boot</name>
+	<artifactId>bot</artifactId>
+	<name>bot</name>
 	<description>discordBot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -44,10 +43,18 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.walkyst</groupId>
-			<artifactId>lavaplayer-fork</artifactId>
-			<version>1.4.3</version>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.17.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.15.1</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>com.google.apis</groupId>
 			<artifactId>google-api-services-youtube</artifactId>
@@ -71,6 +78,7 @@
 	</repositories>
 
 	<build>
+		<finalName>bot</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
