@@ -19,12 +19,15 @@ public class Profile {
     @Id
     @Column(unique = true)
     private Long idDiscord;
+
+    protected String nickname;
     private int coins;
 
     @Fetch(FetchMode.JOIN)
     @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL)
     private List<Playlist> playlists;
-    public Profile(long id){
+    public Profile(long id, String nickname){
+        this.nickname = nickname;
         this.idDiscord = id;
         this.coins = 0;
         this.playlists = new ArrayList<>();

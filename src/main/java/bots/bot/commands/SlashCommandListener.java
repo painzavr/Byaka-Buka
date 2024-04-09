@@ -3,6 +3,7 @@ package bots.bot.commands;
 import bots.bot.coin.Profile;
 import bots.bot.coin.ProfileRepository;
 import bots.bot.coin.VoiceListener;
+import bots.bot.music.SpotifyParser.SpotifyPlaylistParser;
 import bots.bot.music.commands.Play;
 import bots.bot.music.player.PlayerManager;
 import bots.bot.playlist.Playlist;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 
@@ -41,7 +43,7 @@ public class SlashCommandListener extends ListenerAdapter {
             case "play" -> {
                 try {
                     playCommand(event);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | IOException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -49,7 +51,41 @@ public class SlashCommandListener extends ListenerAdapter {
             case "remove" -> removeCommand(event);
             case "delete" -> deleteCommand(event);
             case "queue" -> queueCommand(event);
+            case "spotify" -> {
+                try {
+                    spotifyCommand(event);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
         }
+    }
+    protected void spotifyCommand(SlashCommandInteractionEvent event) throws IOException {
+        Profile profile = profileRepository.findByDiscordId(event.getMember().getIdLong()).get();
+        Optional<Playlist> optionalPlaylist = playlistRepository.findPlaylistByName(event.getOption("title").getAsString());
+        if(optionalPlaylist.isPresent()){
+            Playlist playlist = optionalPlaylist.get();
+            if(event.getMember().getIdLong() == playlist.getProfile().getIdDiscord() || playlist.getProfile().getIdDiscord() == 338935846344589321L) {
+                ArrayList<String> tracks = SpotifyPlaylistParser.parsePlaylist(event.getOption("link").getAsString(), event.getOption("number").getAsInt());
+                playlist.getList().addAll(tracks);
+                event.reply("```Playlist was successfully modified!```").setEphemeral(true).queue();
+                playlistRepository.save(playlist);
+            }else{
+                event.reply("```You can modify only your own playlist```").queue();
+            }
+        }else{
+            String link = event.getOption("link").getAsString();
+            String[] tracks = SpotifyPlaylistParser.parsePlaylist(link, event.getOption("number").getAsInt()).toArray(new String[0]);
+            Playlist playlist = new Playlist(event.getOption("title").getAsString(), tracks, profile);
+
+            profile.getPlaylists().add(playlist);
+            System.out.println(playlist + " was created");
+            event.reply("```Playlist was successfully created!```").setEphemeral(true).queue();
+            profileRepository.save(profile);
+        }
+
+
     }
 
     private void queueCommand(SlashCommandInteractionEvent event) {
@@ -156,27 +192,25 @@ public class SlashCommandListener extends ListenerAdapter {
                 Playlist playlist = playlistRepository.findPlaylistWithListAndProfileByName(event.getOption("title").getAsString()).get();
 
 
-                event.replyEmbeds(CustomEmbed.playList(playlist, VoiceListener.memberCache.get(profile.getIdDiscord()).getUser().getName())).queue();
+                event.replyEmbeds(CustomEmbed.playList(playlist, profile.getNickname(), event.getOption("number").getAsInt())).queue();
             }else{
                 event.reply("```There is no such playlist```").setEphemeral(true).queue();
             }
         }
     }
+
     public void createCommand(SlashCommandInteractionEvent event){
         Profile profile = profileRepository.findByDiscordId(event.getMember().getIdLong()).get();
         String[] tracks = event.getOption("tracks").getAsString().split("   ");
-        Playlist playlist = new Playlist(event.getOption("title").getAsString(), tracks);
-        ArrayList<Playlist> list = new ArrayList<>();
-        list.add(playlist);
-        profile.setPlaylists(list);
-        playlist.setProfile(profile);
-        event.reply("```Playlist was successfully created!```").setEphemeral(true).queue();
+        Playlist playlist = new Playlist(event.getOption("title").getAsString(), tracks, profile);
+
+        profile.getPlaylists().add(playlist);
         profileRepository.save(profile);
-        System.out.println();
-        event.getChannel().asTextChannel().getGuild().getMemberById(playlist.getProfile().getIdDiscord());
+
+        event.reply("```Playlist was successfully created!```").setEphemeral(true).queue();
     }
 
-    public void playCommand(SlashCommandInteractionEvent event) throws InterruptedException {
+    public void playCommand(SlashCommandInteractionEvent event) throws InterruptedException, IOException {
         Optional<Playlist> optionalPlaylist = playlistRepository.findPlaylistByName(event.getOption("title").getAsString());
         if(optionalPlaylist.isPresent()){
             Playlist playlist = optionalPlaylist.get();

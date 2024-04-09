@@ -1,6 +1,7 @@
 package bots.bot.music.commands;
 
 import bots.bot.music.ICommand;
+import bots.bot.music.SpotifyParser.SpotifyPlaylistParser;
 import bots.bot.music.autoleave.AdvancedHashMap;
 import bots.bot.music.autoleave.AutoLeave;
 import bots.bot.music.autoleave.LeftTimerTask;
@@ -16,6 +17,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.*;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Time;
@@ -29,7 +31,7 @@ public class Play implements ICommand {
 
 
     @Override
-    public void execute(MessageReceivedEvent event) throws InterruptedException {
+    public void execute(MessageReceivedEvent event) throws InterruptedException, IOException {
 
         if(!event.getMember().getVoiceState().inAudioChannel()){
             event.getChannel().asTextChannel().sendMessage("You need to be in a voice channel for this command to work.").queue();
@@ -55,7 +57,9 @@ public class Play implements ICommand {
             if (!isUrl(link)) {
                 link = "ytsearch:" + String.join(" ", link) + " audio";
             }
-            System.out.println(link);
+            if(link.contains("open.spotify")){
+                link = "ytsearch: " + SpotifyPlaylistParser.parseSoloTrack(link) + " audio";
+            }
             System.out.println(event.getMember().getUser().getName() + " " + event.getGuild().getName());
 
             PlayerManager.getInstance().loadAndPlay(event.getChannel().asTextChannel(), link);
@@ -86,7 +90,7 @@ public class Play implements ICommand {
         }
     }
 
-    public void executePlaylist(SlashCommandInteractionEvent event, List<String> songs, String songName) throws InterruptedException {
+    public void executePlaylist(SlashCommandInteractionEvent event, List<String> songs, String songName) throws InterruptedException, IOException {
 
         if(!event.getMember().getVoiceState().inAudioChannel()){
             event.getChannel().asTextChannel().sendMessage("You need to be in a voice channel for this command to work.").queue();
@@ -103,6 +107,9 @@ public class Play implements ICommand {
             if (!isUrl(link)) {
                 urlSong.add("ytsearch:" + String.join(" ", link) + " audio");
             } else {
+                if(link.contains("open.spotify")){
+                    link = "ytsearch: " + SpotifyPlaylistParser.parseSoloTrack(link) + " audio";
+                }
                 urlSong.add(link);
             }
         }

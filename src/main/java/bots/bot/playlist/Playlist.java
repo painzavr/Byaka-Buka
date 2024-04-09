@@ -34,9 +34,10 @@ public class Playlist {
     @JsonIgnore
     private Profile profile;
 
-    public Playlist(String name, String[] tracks){
+    public Playlist(String name, String[] tracks, Profile profile){
         this.name = name;
         this.list = new ArrayList<>(Arrays.asList(tracks));
+        this.profile = profile;
     }
     public Playlist(String name){
         this.name = name;

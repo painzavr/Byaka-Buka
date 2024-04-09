@@ -42,7 +42,7 @@ public class VoiceListener extends ListenerAdapter {
             }
         }else if(!member.getUser().isBot()){
             System.out.println(member.getUser().getName() + " first time in " + event.getGuild().getName());
-            Profile profile = new Profile(member.getIdLong());
+            Profile profile = new Profile(member.getIdLong(), event.getMember().getUser().getEffectiveName());
             profileRepository.save(profile);
             voiceStartTime.put(event.getMember().getIdLong(), System.currentTimeMillis());
             memberCache.put(member.getIdLong(), member);

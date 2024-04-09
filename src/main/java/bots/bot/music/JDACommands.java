@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -27,7 +28,7 @@ public class JDACommands extends ListenerAdapter {
         this.commands.add(command);
     }
 
-    private void init(MessageReceivedEvent event) throws InterruptedException {
+    private void init(MessageReceivedEvent event) throws InterruptedException, IOException {
         Iterator commandIterator = this.commands.iterator();
 
         while(commandIterator.hasNext()) {
@@ -51,6 +52,8 @@ public class JDACommands extends ListenerAdapter {
             try {
                 this.init(event);
             } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }

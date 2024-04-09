@@ -21,7 +21,7 @@ public class CustomEmbed {
 
         return embedBuilder.build();
     }
-    public static MessageEmbed playList(Playlist playlist, String owner){
+    public static MessageEmbed playList(Playlist playlist, String owner, int page){
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setTitle("***" + playlist.getName()+"***");
         embedBuilder.setColor(Color.GRAY);
@@ -29,10 +29,13 @@ public class CustomEmbed {
         embedBuilder.addField("Owner", owner, true);
         embedBuilder.addField("Total Tracks", String.valueOf(playlist.getList().size()), true);
         List<String> tracks = playlist.getList();
+        int startIndex = (page - 1) * 20;
+        int endIndex = Math.min(page * 20, tracks.size());
+        tracks = tracks.subList(startIndex,endIndex);
 
         StringBuilder tracksText = new StringBuilder();
         for (int i = 0; i < tracks.size(); i++) {
-            tracksText.append(String.format("**%d.** %s%n", i + 1, tracks.get(i)));
+            tracksText.append(String.format("**%d.** %s%n", (page - 1) * 20 + i + 1, tracks.get(i)));
         }
 
         embedBuilder.addField("Tracks:", tracksText.toString(), false);

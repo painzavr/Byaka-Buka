@@ -20,6 +20,8 @@ public class PlayerManager {
         this.musicManagers = new HashMap<>();
         this.audioPlayerManager = new DefaultAudioPlayerManager();
 
+        YoutubeAudioSourceManager youtubeAudioSourceManager = new YoutubeAudioSourceManager(true, "litynschoolone@gmail.com", "school#1password");
+        audioPlayerManager.registerSourceManager(youtubeAudioSourceManager);
         AudioSourceManagers.registerRemoteSources(this.audioPlayerManager);
         AudioSourceManagers.registerLocalSource(this.audioPlayerManager);
     }
