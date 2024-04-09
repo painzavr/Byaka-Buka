@@ -18,7 +18,7 @@ This Discord bot is a musical delight, crafted with lavaplayer and Java Discord 
 
 ## Getting Started:
 1. Clone the repository.
-2. Configure your Discord API token.
+2. Configure your Discord API token. - > Take it on developer portal and parse it  to initialization in class mBot 'UR_TOKEN'
 3. Start the PostgreSQL database with the configuration specified in `application.properties`.
 4. Install dependencies.
 5. Run the bot.
